@@ -12,6 +12,12 @@
 
 </head>
 <body>
+<br><br>
+<br><br>
+  
+
+  
+
 
   <marquee direction="right" style="color: rgb(8, 237, 31); font-size: 30px;">
   HUSH KELIBSIZ WEB SAYITIMIZGA
@@ -38,7 +44,7 @@
   
   <h1 style="color: blue;">bu ko'k rang</h1>
    
-  <p style="color: white; background-color: blue; padding: 8px;">Bu yozuv oq, faqat orqasida moviy fon bor.</p>
+  <p style="color: white; background-color: blue; padding: 8px; display: inline-block;">Bu yozuv oq, faqat orqasida moviy fon bor.</p>
 
   <p style="font-size: 30px;">Bu katta yozuv</p>
 
@@ -53,6 +59,113 @@
       100% {margin-left: 0%;}
     }
   </style>  
+
+ <p id="time" style="font-size: 25px; color: #e8efed; position: absolute; top: 10px; right: 20px;"></p>
+
+<script>
+  function showTime() {
+    const now = new Date();
+    const time = now.toLocaleTimeString();
+    document.getElementById("time").innerHTML = time;
+  }
+
+  setInterval(showTime, 1000);
+  showTime();
+</script>
+
+
+
+<style>
+  #info-container {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 1s ease, opacity 1s ease;
+  }
+
+  #info-container.show {
+    max-height: 2000px; /* yetarlicha katta bo‘lishi kerak */
+    opacity: 1;
+  }
+
+  #info-inner {
+    padding: 20px;
+    color: white;
+    text-align: center;
+  }
+</style>
+
+<div style="text-align: center; margin: 20px; color: white;">
+  <p style="font-size: 18px;">AI haqida bilish uchun bosing</p>
+  <button onclick="showInfo()" 
+          style="background-color: green; color: white; font-size: 16px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+    AI haqida
+  </button>
+</div>
+
+<!-- Bu yerda info tagi joy ajratilgan -->
+<div id="info-container">
+  <div id="info-inner">
+    <h1 style="font-size: 28px; margin-bottom: 20px;">SUN'IY INTELEKT - nima</h1>
+    <p style="max-width: 800px; margin: 0 auto;">
+      Bugungi kunda keng qoʻllanilib kelinayotgan sunʼiy intellekt texnologiyalariga aqlli veb-qidiruv tizimlari (masalan, YouTube Search), tavsiya tizimlari (YouTube, Amazon va Netflix), tabiiy tilni tushunish (Google Assistant, Siri va Alexa), oʻzini-oʻzi boshqaradigan avtomobillar (masalan, Waymo) va boshqalarni misol qilish mumkin.<br><br>
+      Alan Turing sunʼiy intellekt sohasida olib borilgan ilk tadqiqot muallifi boʻlgan...
+    </p>
+
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+      <img src="Снимок экрана 2025-07-29 113553.png" alt="AI 1" style="width: 200px; border-radius: 12px;">
+      <img src="Снимок экрана 2025-07-29 115832.png" alt="AI 2" style="width: 200px; border-radius: 12px;">
+      <img src="Снимок экрана 2025-07-29 115959.png" alt="AI 3" style="width: 200px; border-radius: 12px;">
+    </div>
+  </div>
+</div>
+
+<script>
+  function showInfo() {
+    document.getElementById('info-container').classList.add('show');
+  }
+</script>
+
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </body>
 </html>
