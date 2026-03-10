@@ -1,240 +1,137 @@
-!DOCTYPE html><
+<!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <title>birinchi web saytim</title>
-
-  <style>
-    body {
-      background-color: black;
-    }
-  </style>
-
+    <meta charset="UTF-8">
+    <title>Air Control - 4 Images</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        #v { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: cover; transform: scaleX(-1); opacity: 0.25; 
+        }
+        .movable-img {
+            position: absolute;
+            width: 200px;
+            border-radius: 8px;
+            transition: transform 0.1s ease;
+            z-index: 10;
+            filter: drop-shadow(0 5px 15px rgba(0,242,254,0.3));
+            border: 2px solid transparent;
+            user-select: none;
+        }
+        .movable-img.active {
+            box-shadow: 0 0 40px #00f2fe;
+            border: 2px solid #00f2fe;
+            z-index: 100; /* Ushlab turganda eng tepaga chiqadi */
+            transform: scale(1.1);
+        }
+        #status {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            color: #00f2fe; background: rgba(0,0,0,0.85);
+            padding: 12px 30px; border-radius: 50px; border: 2px solid #00f2fe;
+            z-index: 1000; font-weight: bold;
+        }
+        #cursor {
+            position: fixed; width: 12px; height: 12px; background: #fff;
+            border-radius: 50%; border: 2px solid #00f2fe;
+            pointer-events: none; z-index: 2000; display: none;
+        }
+    </style>
 </head>
 <body>
-<br><br>
-<br><br>
-  
 
-  
-
-<marquee direction="left" scrollamount="5" style="color: rgb(8, 237, 31); font-size: 24px;">
-  HUSH KELIBSIZ WEB SAYTIMIZGA
-</marquee>
-
-
-
-
-
-
-<br><br>
-<br><br>
-<br><br>
-<br><br>
-
-
-<p style="text-align: center; font-size: 24px; color: #f5f5f5;">
-  BU MENING BIRINCHI WEB SAYTIM
-</p>
-
-
-  <h1 style="color: red;">bu qizil rang</h1>
-  
-  <h1 style="color: blue;">bu ko'k rang</h1>
-   
-  <p style="color: white; background-color: blue; padding: 8px; display: inline-block;">Bu yozuv oq, faqat orqasida moviy fon bor.</p>
-
-  <p style="font-size: 30px;">Bu katta yozuv</p>
-
-  <p style="text-align: center; font-size: 30px; color: purple;">
-
-  <p style="color: rgba(157, 6, 244, 0.019); font-size: 30px; animation: yurish 10s infinite;">Bu harakatlanuvchi matn</p>
-
-  <style>
-    @keyframes yurish {
-      0% {margin-left: 0%;}
-      50% {margin-left: 50%;}
-      100% {margin-left: 0%;}
-    }
-  </style>  
-
- <p id="time" style="font-size: 25px; color: #e8efed; position: absolute; top: 10px; right: 20px;"></p>
-
-
- <script>
-  function showTime() {
-    const now = new Date();
-    const time = now.toLocaleTimeString();
-    document.getElementById("time").innerHTML = time;
-  }
-
-  setInterval(showTime, 1000);
-  showTime();
-</script>
-
-
-
-<style>
-  #info-container {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: max-height 1s ease, opacity 1s ease;
-  }
-
-  #info-container.show {
-    max-height: 2000px; /* yetarlicha katta bo‘lishi kerak */
-    opacity: 1;
-  }
-
-  #info-inner {
-    padding: 20px;
-    color: white;
-    text-align: center;
-  }
-
-
-  </style>
-
-<div style="text-align: center; margin: 20px; color: white;">
-  <p style="font-size: 18px;">AI haqida bilish uchun bosing</p>
-  <button onclick="showInfo()" 
-          style="background-color: green; color: white; font-size: 16px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
-    AI haqida
-  </button>
-</div>
-
-<!-- Bu yerda info tagi joy ajratilgan -->
-<div id="info-container">
-  <div id="info-inner">
-    <h1 style="font-size: 28px; margin-bottom: 20px;">SUN'IY INTELEKT - nima</h1>
-    <p style="max-width: 800px; margin: 0 auto;">
-      Bugungi kunda keng qoʻllanilib kelinayotgan sunʼiy intellekt texnologiyalariga aqlli veb-qidiruv tizimlari (masalan, YouTube Search), tavsiya tizimlari (YouTube, Amazon va Netflix), tabiiy tilni tushunish (Google Assistant, Siri va Alexa), oʻzini-oʻzi boshqaradigan avtomobillar (masalan, Waymo) va boshqalarni misol qilish mumkin.<br><br>
-      Alan Turing sunʼiy intellekt sohasida olib borilgan ilk tadqiqot muallifi boʻlgan...
-    </p>
-
-     <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
-      <img src="Снимок экрана 2025-07-29 113553.png" alt="AI 1" style="width: 200px; border-radius: 12px;">
-      <img src="Снимок экрана 2025-07-29 115832.png" alt="AI 2" style="width: 200px; border-radius: 12px;">
-      <img src="Снимок экрана 2025-07-29 115959.png" alt="AI 3" style="width: 200px; border-radius: 12px;">
-    </div>
-  </div>
-</div>
-
-<script>
-  function showInfo() {
-    document.getElementById('info-container').classList.add('show');
-  }
-</script>
-
-
-
-
-
-
-<!-- Ro‘yxatdan o‘tish modal oynasi -->
-<div id="registerModal" style="
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-">
-  <div style="
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    width: 300px;
-    text-align: center;
-  ">
-    <h2 style="color: black;">Ro'yxatdan o'tish</h2>
-    <input id="isim" type="text" placeholder="Ismingiz" style="margin: 10px; padding: 10px; width: 90%;"><br>
-    <input id="tugilgan" type="number" placeholder="Tug‘ilgan yil" style="margin: 10px; padding: 10px; width: 90%;"><br>
-    <button onclick="submitForm()" style="padding: 10px 20px; background: green; color: white; border: none; border-radius: 8px;">Tasdiqlash</button>
-  </div>
-</div>
-
-<script>
-  // Faqat sahifa yuklanganda modal ochiq bo‘ladi
-  window.onload = function () {
-    if (!localStorage.getItem("registered")) {
-      document.getElementById("registerModal").style.display = "flex";
-      document.body.style.overflow = "hidden";
-    } else {
-      document.getElementById("registerModal").style.display = "none";
-    }
-  }
-
-  function submitForm() {
-    const isim = document.getElementById("isim").value.trim();
-    const yil = document.getElementById("tugilgan").value.trim();
-
-    if (isim !== "" && yil.length === 4) {
-      localStorage.setItem("registered", "true");
-      document.getElementById("registerModal").style.display = "none";
-      document.body.style.overflow = "auto";
-    } else {
-      alert("Iltimos, barcha maydonlarni to‘ldiring.");
-    }
-  }
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <div id="status">AI yuklanmoqda... 📡</div>
+    <div id="cursor"></div>
+    <video id="v" playsinline></video>
+
+    <img src="trhethw.jpg" class="movable-img" style="left: 10%; top: 20%;" onerror="imgErr(this, 'trhethw')">
+    <img src="javox.jpg" class="movable-img" style="left: 35%; top: 20%;" onerror="imgErr(this, 'Javox')">
+    <img src="otash.jpg" class="movable-img" style="left: 60%; top: 20%;" onerror="imgErr(this, 'Otash')">
+    <img src="aziz.jpg" class="movable-img" style="left: 85%; top: 20%;" onerror="imgErr(this, 'Aziz')">
+
+    <script>
+        const video = document.getElementById('v');
+        const status = document.getElementById('status');
+        const cursor = document.getElementById('cursor');
+        const images = document.querySelectorAll('.movable-img');
+
+        let activeImg = null;
+        let offset = { x: 0, y: 0 };
+        let zIndexCounter = 100;
+
+        function imgErr(img, name) {
+            img.src = `https://via.placeholder.com/200x200?text=${name}+topilmadi`;
+        }
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.8,
+            minTrackingConfidence: 0.8
+        });
+
+        hands.onResults((results) => {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const indexTip = landmarks[8]; 
+                const thumbTip = landmarks[4];
+
+                const curX = (1 - indexTip.x) * window.innerWidth;
+                const curY = indexTip.y * window.innerHeight;
+                
+                cursor.style.display = 'block';
+                cursor.style.left = curX + 'px';
+                cursor.style.top = curY + 'px';
+
+                const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+                const isPinching = distance < 0.05;
+
+                if (isPinching) {
+                    if (!activeImg) {
+                        images.forEach(img => {
+                            const rect = img.getBoundingClientRect();
+                            if (curX > rect.left && curX < rect.right && curY > rect.top && curY < rect.bottom) {
+                                activeImg = img;
+                                activeImg.classList.add('active');
+                                // Har safar ushlaganda z-indexni oshiramiz (eng tepaga chiqadi)
+                                zIndexCounter++;
+                                activeImg.style.zIndex = zIndexCounter;
+                                offset.x = curX - rect.left;
+                                offset.y = curY - rect.top;
+                            }
+                        });
+                    }
+                } else {
+                    if (activeImg) {
+                        activeImg.classList.remove('active');
+                        activeImg = null;
+                    }
+                }
+
+                if (activeImg) {
+                    activeImg.style.left = (curX - offset.x) + 'px';
+                    activeImg.style.top = (curY - offset.y) + 'px';
+                    status.innerText = "Ushlab turilibdi! ✊";
+                } else {
+                    status.innerText = "Rasmni ushlash uchun chimchilang (Pinch) ✋";
+                }
+            } else {
+                cursor.style.display = 'none';
+                status.innerText = "Qo'lingizni ko'rsating ✋";
+            }
+        });
+
+        const camera = new Camera(video, {
+            onFrame: async () => { await hands.send({image: video}); },
+            width: 1280, height: 720
+        });
+        camera.start();
+    </script>
 </body>
 </html>
- 
- 
