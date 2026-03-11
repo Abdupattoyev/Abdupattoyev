@@ -2,136 +2,249 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>Air Control - 4 Images</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stark Maze: D-Pad Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-        #v { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            object-fit: cover; transform: scaleX(-1); opacity: 0.25; 
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Orbitron', sans-serif; touch-action: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: space-around; color: #00f2fe; z-index: 10; font-size: 14px; text-shadow: 0 0 10px #00f2fe; pointer-events: none; }
+        
+        #ui {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 30; pointer-events: none;
         }
-        .movable-img {
-            position: absolute;
-            width: 200px;
-            border-radius: 8px;
-            transition: transform 0.1s ease;
-            z-index: 10;
-            filter: drop-shadow(0 5px 15px rgba(0,242,254,0.3));
-            border: 2px solid transparent;
-            user-select: none;
+        #restart-btn {
+            padding: 15px 40px; font-size: 20px; background: #ff0055; color: #fff;
+            border: none; border-radius: 5px; cursor: pointer; display: none;
+            pointer-events: auto; font-family: 'Orbitron'; font-weight: bold;
+            box-shadow: 0 0 20px #ff0055;
         }
-        .movable-img.active {
-            box-shadow: 0 0 40px #00f2fe;
-            border: 2px solid #00f2fe;
-            z-index: 100; /* Ushlab turganda eng tepaga chiqadi */
-            transform: scale(1.1);
+
+        /* Tugmali Joystik Stili */
+        #controls {
+            position: fixed; bottom: 20px; left: 20px;
+            display: grid; grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px; gap: 5px; z-index: 40;
         }
-        #status {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            color: #00f2fe; background: rgba(0,0,0,0.85);
-            padding: 12px 30px; border-radius: 50px; border: 2px solid #00f2fe;
-            z-index: 1000; font-weight: bold;
+        .btn {
+            width: 60px; height: 60px; background: rgba(0, 242, 254, 0.2);
+            border: 2px solid #00f2fe; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: #00f2fe; font-size: 24px; font-weight: bold;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        #cursor {
-            position: fixed; width: 12px; height: 12px; background: #fff;
-            border-radius: 50%; border: 2px solid #00f2fe;
-            pointer-events: none; z-index: 2000; display: none;
-        }
+        .btn:active { background: rgba(0, 242, 254, 0.5); transform: scale(0.95); }
+        .up { grid-column: 2; }
+        .left { grid-column: 1; grid-row: 2; }
+        .down { grid-column: 2; grid-row: 2; }
+        .right { grid-column: 3; grid-row: 2; }
     </style>
 </head>
 <body>
+    <div id="hud">
+        <div>BOSQICH: <span id="lvl">1</span></div>
+        <div id="status">TUGMALARNI BOSING</div>
+    </div>
+    
+    <div id="controls">
+        <div class="btn up" id="btn-up">▲</div>
+        <div class="btn left" id="btn-left">◀</div>
+        <div class="btn down" id="btn-down">▼</div>
+        <div class="btn right" id="btn-right">▶</div>
+    </div>
 
-    <div id="status">AI yuklanmoqda... 📡</div>
-    <div id="cursor"></div>
-    <video id="v" playsinline></video>
-
-    <img src="trhethw.jpg" class="movable-img" style="left: 10%; top: 20%;" onerror="imgErr(this, 'trhethw')">
-    <img src="javox.jpg" class="movable-img" style="left: 35%; top: 20%;" onerror="imgErr(this, 'Javox')">
-    <img src="otash.jpg" class="movable-img" style="left: 60%; top: 20%;" onerror="imgErr(this, 'Otash')">
-    <img src="aziz.jpg" class="movable-img" style="left: 85%; top: 20%;" onerror="imgErr(this, 'Aziz')">
+    <div id="ui"><button id="restart-btn" onclick="resetGame()">RESTART</button></div>
+    <canvas id="canvas"></canvas>
 
     <script>
-        const video = document.getElementById('v');
-        const status = document.getElementById('status');
-        const cursor = document.getElementById('cursor');
-        const images = document.querySelectorAll('.movable-img');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const restartBtn = document.getElementById('restart-btn');
 
-        let activeImg = null;
-        let offset = { x: 0, y: 0 };
-        let zIndexCounter = 100;
+        const imgJavox = new Image(); imgJavox.src = 'javox.jpg';
+        const imgIbo = new Image(); imgIbo.src = 'ibo.jpg';
 
-        function imgErr(img, name) {
-            img.src = `https://via.placeholder.com/200x200?text=${name}+topilmadi`;
+        let currentLevel = 1, isGameOver = false;
+        let lastMoveTime = 0;
+        const playerMoveDelay = 150; 
+
+        const levels = {
+            1: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1],
+                [1,0,1,0,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1], 
+                [1,0,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            2: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,3,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            3: [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,3,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        };
+
+        let maze, rows, cols;
+        let player = { gx: 12, gy: 7, vx: 12, vy: 7 };
+        let enemy = { gx: 1, gy: 1, vx: 1, vy: 1, nextX: 1, nextY: 1 };
+        let stars = Array(80).fill().map(() => ({x: Math.random()*2500, y: Math.random()*2500, s: Math.random()*2}));
+        
+        let keys = {};
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        // Tugmalar boshqaruvi
+        const btnControls = {
+            'btn-up': false, 'btn-down': false, 'btn-left': false, 'btn-right': false
+        };
+
+        Object.keys(btnControls).forEach(id => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); btnControls[id] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); btnControls[id] = false; });
+            btn.addEventListener('mousedown', () => btnControls[id] = true);
+            btn.addEventListener('mouseup', () => btnControls[id] = false);
+        });
+
+        function initLevel(lvl) {
+            isGameOver = false;
+            restartBtn.style.display = "none";
+            maze = levels[lvl];
+            rows = maze.length; cols = maze[0].length;
+            player.gx = 12; player.gy = 7; player.vx = 12; player.vy = 7;
+            enemy.gx = 1; enemy.gy = 1; enemy.vx = 1; enemy.vy = 1; enemy.nextX = 1; enemy.nextY = 1;
+            document.getElementById('lvl').innerText = lvl;
         }
 
-        const hands = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
-
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.8,
-            minTrackingConfidence: 0.8
-        });
-
-        hands.onResults((results) => {
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                const indexTip = landmarks[8]; 
-                const thumbTip = landmarks[4];
-
-                const curX = (1 - indexTip.x) * window.innerWidth;
-                const curY = indexTip.y * window.innerHeight;
-                
-                cursor.style.display = 'block';
-                cursor.style.left = curX + 'px';
-                cursor.style.top = curY + 'px';
-
-                const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
-                const isPinching = distance < 0.05;
-
-                if (isPinching) {
-                    if (!activeImg) {
-                        images.forEach(img => {
-                            const rect = img.getBoundingClientRect();
-                            if (curX > rect.left && curX < rect.right && curY > rect.top && curY < rect.bottom) {
-                                activeImg = img;
-                                activeImg.classList.add('active');
-                                // Har safar ushlaganda z-indexni oshiramiz (eng tepaga chiqadi)
-                                zIndexCounter++;
-                                activeImg.style.zIndex = zIndexCounter;
-                                offset.x = curX - rect.left;
-                                offset.y = curY - rect.top;
-                            }
-                        });
-                    }
-                } else {
-                    if (activeImg) {
-                        activeImg.classList.remove('active');
-                        activeImg = null;
+        function findNextStep(maze, start, target) {
+            let queue = [[{x: Math.round(start.x), y: Math.round(start.y)}]];
+            let visited = new Set([`${Math.round(start.x)},${Math.round(start.y)}`]);
+            while(queue.length > 0) {
+                let path = queue.shift(), curr = path[path.length - 1];
+                if(curr.x === target.x && curr.y === target.y) return path[1] || path[0];
+                const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+                for(let [dx, dy] of dirs) {
+                    let nx = curr.x + dx, ny = curr.y + dy;
+                    if(maze[ny] && (maze[ny][nx] !== 1) && !visited.has(`${nx},${ny}`)) {
+                        visited.add(`${nx},${ny}`); queue.push([...path, {x: nx, y: ny}]);
                     }
                 }
-
-                if (activeImg) {
-                    activeImg.style.left = (curX - offset.x) + 'px';
-                    activeImg.style.top = (curY - offset.y) + 'px';
-                    status.innerText = "Ushlab turilibdi! ✊";
-                } else {
-                    status.innerText = "Rasmni ushlash uchun chimchilang (Pinch) ✋";
-                }
-            } else {
-                cursor.style.display = 'none';
-                status.innerText = "Qo'lingizni ko'rsating ✋";
             }
-        });
+            return {x: start.x, y: start.y};
+        }
 
-        const camera = new Camera(video, {
-            onFrame: async () => { await hands.send({image: video}); },
-            width: 1280, height: 720
-        });
-        camera.start();
+        function update() {
+            if(isGameOver) return;
+
+            const now = Date.now();
+            if (now - lastMoveTime > playerMoveDelay) {
+                let nx = player.gx, ny = player.gy;
+                
+                // Klaviatura yoki D-Pad
+                if(keys['ArrowLeft'] || btnControls['btn-left']) nx--;
+                else if(keys['ArrowRight'] || btnControls['btn-right']) nx++;
+                else if(keys['ArrowUp'] || btnControls['btn-up']) ny--;
+                else if(keys['ArrowDown'] || btnControls['btn-down']) ny++;
+
+                if(maze[ny] && maze[ny][nx] !== 1) {
+                    player.gx = nx; player.gy = ny;
+                    lastMoveTime = now;
+                }
+            }
+            player.vx += (player.gx - player.vx) * 0.18;
+            player.vy += (player.gy - player.vy) * 0.18;
+
+            let enemySpeed = (currentLevel === 1) ? 0.05 : (currentLevel === 2 ? 0.07 : 0.09);
+            if (Math.hypot(enemy.vx - enemy.nextX, enemy.vy - enemy.nextY) < 0.05) {
+                enemy.vx = enemy.nextX; enemy.vy = enemy.nextY;
+                let step = findNextStep(maze, {x: enemy.vx, y: enemy.vy}, {x: player.gx, y: player.gy});
+                enemy.nextX = step.x; enemy.nextY = step.y;
+            }
+            if (enemy.vx < enemy.nextX) enemy.vx += enemySpeed;
+            if (enemy.vx > enemy.nextX) enemy.vx -= enemySpeed;
+            if (enemy.vy < enemy.nextY) enemy.vy += enemySpeed;
+            if (enemy.vy > enemy.nextY) enemy.vy -= enemySpeed;
+
+            if(Math.hypot(player.vx - enemy.vx, player.vy - enemy.vy) < 0.5) {
+                isGameOver = true;
+                restartBtn.style.display = "block";
+            }
+            if(maze[player.gy][player.gx] === 3) {
+                currentLevel++;
+                if(currentLevel > 3) { alert("SIZ AFSONASIZ!"); resetGame(); }
+                else { initLevel(currentLevel); }
+            }
+        }
+
+        function draw() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const cw = canvas.width / cols, ch = canvas.height / rows;
+            ctx.fillStyle = "#000"; ctx.fillRect(0,0, canvas.width, canvas.height);
+            stars.forEach(s => { ctx.fillStyle = "#fff"; ctx.fillRect(s.x % canvas.width, s.y % canvas.height, s.s, s.s); });
+
+            for(let r=0; r<rows; r++) {
+                for(let c=0; c<cols; c++) {
+                    if(maze[r][c] === 1) {
+                        ctx.strokeStyle = "#00f2fe"; ctx.lineWidth = 1;
+                        ctx.strokeRect(c*cw+1, r*ch+1, cw-2, ch-2);
+                    }
+                    if(maze[r][c] === 3) {
+                        ctx.fillStyle = "rgba(0, 255, 0, 0.4)"; ctx.fillRect(c*cw, r*ch, cw, ch);
+                        ctx.fillStyle = "#00ff00"; ctx.font = "bold 10px Orbitron"; ctx.textAlign = "center";
+                        ctx.fillText("EXIT", c*cw + cw/2, r*ch + ch/2 + 5);
+                    }
+                }
+            }
+
+            if (!isGameOver) ctx.drawImage(imgJavox, player.vx * cw + 2, player.vy * ch + 2, cw-4, ch-4);
+            ctx.drawImage(imgIbo, enemy.vx * cw + 1, enemy.vy * ch + 1, cw-2, ch-2);
+
+            if(isGameOver) {
+                ctx.fillStyle = "#ff0055"; ctx.font = "bold 18px Orbitron"; ctx.textAlign = "center";
+                ctx.fillText("BOT", enemy.vx * cw + cw/2, enemy.vy * ch - 10);
+            }
+            update();
+            requestAnimationFrame(draw);
+        }
+
+        function resetGame() { currentLevel = 1; initLevel(1); }
+        initLevel(1);
+        draw();
     </script>
 </body>
 </html>
