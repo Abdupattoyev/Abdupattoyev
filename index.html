@@ -1,250 +1,213 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stark Maze: D-Pad Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
-    <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Orbitron', sans-serif; touch-action: none; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        
-        #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: space-around; color: #00f2fe; z-index: 10; font-size: 14px; text-shadow: 0 0 10px #00f2fe; pointer-events: none; }
-        
-        #ui {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            z-index: 30; pointer-events: none;
-        }
-        #restart-btn {
-            padding: 15px 40px; font-size: 20px; background: #ff0055; color: #fff;
-            border: none; border-radius: 5px; cursor: pointer; display: none;
-            pointer-events: auto; font-family: 'Orbitron'; font-weight: bold;
-            box-shadow: 0 0 20px #ff0055;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manga Platformer Mobile</title>
 
-        /* Tugmali Joystik Stili */
-        #controls {
-            position: fixed; bottom: 20px; left: 20px;
-            display: grid; grid-template-columns: 60px 60px 60px;
-            grid-template-rows: 60px 60px; gap: 5px; z-index: 40;
-        }
-        .btn {
-            width: 60px; height: 60px; background: rgba(0, 242, 254, 0.2);
-            border: 2px solid #00f2fe; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            color: #00f2fe; font-size: 24px; font-weight: bold;
-            user-select: none; -webkit-tap-highlight-color: transparent;
-        }
-        .btn:active { background: rgba(0, 242, 254, 0.5); transform: scale(0.95); }
-        .up { grid-column: 2; }
-        .left { grid-column: 1; grid-row: 2; }
-        .down { grid-column: 2; grid-row: 2; }
-        .right { grid-column: 3; grid-row: 2; }
-    </style>
+<style>
+body { 
+    margin:0; 
+    padding:0; 
+    background:#000; 
+    overflow:hidden; 
+    touch-action:none;
+    font-family: Arial;
+}
+
+canvas { 
+    display:block; 
+    margin:0 auto; 
+    background:#0a001f; 
+}
+
+#controls { 
+    position: fixed; 
+    bottom: 20px; 
+    left: 0; 
+    right: 0; 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 0 20px; 
+}
+
+#joystick { 
+    width: 120px; 
+    height: 120px; 
+    background: rgba(255,255,255,0.15); 
+    border-radius: 50%; 
+    border: 2px solid #00ff88;
+    position: relative;
+}
+
+#stick {
+    width: 50px;
+    height: 50px;
+    background: #00ff88;
+    border-radius: 50%;
+    position: absolute;
+    left: 35px;
+    top: 35px;
+}
+
+#shootBtn { 
+    width: 90px; 
+    height: 90px; 
+    background: red; 
+    color: white; 
+    border: none; 
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#shootBtn:active {
+    transform: scale(0.9);
+}
+</style>
 </head>
+
 <body>
-    <div id="hud">
-        <div>BOSQICH: <span id="lvl">1</span></div>
-        <div id="status">TUGMALARNI BOSING</div>
+
+<canvas id="game"></canvas>
+
+<div id="controls">
+    <div id="joystick">
+        <div id="stick"></div>
     </div>
-    
-    <div id="controls">
-        <div class="btn up" id="btn-up">▲</div>
-        <div class="btn left" id="btn-left">◀</div>
-        <div class="btn down" id="btn-down">▼</div>
-        <div class="btn right" id="btn-right">▶</div>
-    </div>
+    <button id="shootBtn">FIRE</button>
+</div>
 
-    <div id="ui"><button id="restart-btn" onclick="resetGame()">RESTART</button></div>
-    <canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const restartBtn = document.getElementById('restart-btn');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-        const imgJavox = new Image(); imgJavox.src = 'javox.jpg';
-        const imgIbo = new Image(); imgIbo.src = 'ibo.jpg';
+// PLAYER
+let player = {
+    x: 100,
+    y: 300,
+    w: 40,
+    h: 60,
+    dx: 0,
+    dy: 0,
+    speed: 4,
+    jump: -12,
+    grounded: false
+};
 
-        let currentLevel = 1, isGameOver = false;
-        let lastMoveTime = 0;
-        const playerMoveDelay = 150; 
+// BULLETS
+let bullets = [];
 
-        const levels = {
-            1: [
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-                [1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1],
-                [1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1],
-                [1,0,1,1,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
-                [1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1],
-                [1,0,1,0,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1],
-                [1,0,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1], 
-                [1,0,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
-                [1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
-                [1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-                [1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-            ],
-            2: [
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                [1,3,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
-                [1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1],
-                [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
-                [1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-            ],
-            3: [
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
-                [1,0,1,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
-                [1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
-                [1,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1],
-                [1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1],
-                [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1],
-                [1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1],
-                [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1],
-                [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
-                [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
-                [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,3,1],
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-            ]
-        };
+// GRAVITY
+const gravity = 0.6;
 
-        let maze, rows, cols;
-        let player = { gx: 12, gy: 7, vx: 12, vy: 7 };
-        let enemy = { gx: 1, gy: 1, vx: 1, vy: 1, nextX: 1, nextY: 1 };
-        let stars = Array(80).fill().map(() => ({x: Math.random()*2500, y: Math.random()*2500, s: Math.random()*2}));
-        
-        let keys = {};
-        window.addEventListener('keydown', e => keys[e.key] = true);
-        window.addEventListener('keyup', e => keys[e.key] = false);
+// JOYSTICK
+let joystick = document.getElementById("joystick");
+let stick = document.getElementById("stick");
 
-        // Tugmalar boshqaruvi
-        const btnControls = {
-            'btn-up': false, 'btn-down': false, 'btn-left': false, 'btn-right': false
-        };
+let dragging = false;
+let joyX = 0;
 
-        Object.keys(btnControls).forEach(id => {
-            const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); btnControls[id] = true; });
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); btnControls[id] = false; });
-            btn.addEventListener('mousedown', () => btnControls[id] = true);
-            btn.addEventListener('mouseup', () => btnControls[id] = false);
-        });
+// TOUCH CONTROLS
+joystick.addEventListener("touchstart", () => dragging = true);
 
-        function initLevel(lvl) {
-            isGameOver = false;
-            restartBtn.style.display = "none";
-            maze = levels[lvl];
-            rows = maze.length; cols = maze[0].length;
-            player.gx = 12; player.gy = 7; player.vx = 12; player.vy = 7;
-            enemy.gx = 1; enemy.gy = 1; enemy.vx = 1; enemy.vy = 1; enemy.nextX = 1; enemy.nextY = 1;
-            document.getElementById('lvl').innerText = lvl;
-        }
+joystick.addEventListener("touchmove", (e) => {
+    if(!dragging) return;
 
-        function findNextStep(maze, start, target) {
-            let queue = [[{x: Math.round(start.x), y: Math.round(start.y)}]];
-            let visited = new Set([`${Math.round(start.x)},${Math.round(start.y)}`]);
-            while(queue.length > 0) {
-                let path = queue.shift(), curr = path[path.length - 1];
-                if(curr.x === target.x && curr.y === target.y) return path[1] || path[0];
-                const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
-                for(let [dx, dy] of dirs) {
-                    let nx = curr.x + dx, ny = curr.y + dy;
-                    if(maze[ny] && (maze[ny][nx] !== 1) && !visited.has(`${nx},${ny}`)) {
-                        visited.add(`${nx},${ny}`); queue.push([...path, {x: nx, y: ny}]);
-                    }
-                }
-            }
-            return {x: start.x, y: start.y};
-        }
+    let rect = joystick.getBoundingClientRect();
+    let x = e.touches[0].clientX - rect.left - 60;
 
-        function update() {
-            if(isGameOver) return;
+    joyX = x;
 
-            const now = Date.now();
-            if (now - lastMoveTime > playerMoveDelay) {
-                let nx = player.gx, ny = player.gy;
-                
-                // Klaviatura yoki D-Pad
-                if(keys['ArrowLeft'] || btnControls['btn-left']) nx--;
-                else if(keys['ArrowRight'] || btnControls['btn-right']) nx++;
-                else if(keys['ArrowUp'] || btnControls['btn-up']) ny--;
-                else if(keys['ArrowDown'] || btnControls['btn-down']) ny++;
+    // limit
+    if(joyX > 40) joyX = 40;
+    if(joyX < -40) joyX = -40;
 
-                if(maze[ny] && maze[ny][nx] !== 1) {
-                    player.gx = nx; player.gy = ny;
-                    lastMoveTime = now;
-                }
-            }
-            player.vx += (player.gx - player.vx) * 0.18;
-            player.vy += (player.gy - player.vy) * 0.18;
+    stick.style.left = (35 + joyX) + "px";
+});
 
-            let enemySpeed = (currentLevel === 1) ? 0.05 : (currentLevel === 2 ? 0.07 : 0.09);
-            if (Math.hypot(enemy.vx - enemy.nextX, enemy.vy - enemy.nextY) < 0.05) {
-                enemy.vx = enemy.nextX; enemy.vy = enemy.nextY;
-                let step = findNextStep(maze, {x: enemy.vx, y: enemy.vy}, {x: player.gx, y: player.gy});
-                enemy.nextX = step.x; enemy.nextY = step.y;
-            }
-            if (enemy.vx < enemy.nextX) enemy.vx += enemySpeed;
-            if (enemy.vx > enemy.nextX) enemy.vx -= enemySpeed;
-            if (enemy.vy < enemy.nextY) enemy.vy += enemySpeed;
-            if (enemy.vy > enemy.nextY) enemy.vy -= enemySpeed;
+joystick.addEventListener("touchend", () => {
+    dragging = false;
+    joyX = 0;
+    stick.style.left = "35px";
+});
 
-            if(Math.hypot(player.vx - enemy.vx, player.vy - enemy.vy) < 0.5) {
-                isGameOver = true;
-                restartBtn.style.display = "block";
-            }
-            if(maze[player.gy][player.gx] === 3) {
-                currentLevel++;
-                if(currentLevel > 3) { alert("SIZ AFSONASIZ!"); resetGame(); }
-                else { initLevel(currentLevel); }
-            }
-        }
+// SHOOT
+document.getElementById("shootBtn").addEventListener("touchstart", () => {
+    bullets.push({
+        x: player.x + player.w,
+        y: player.y + player.h/2,
+        speed: 8
+    });
+});
 
-        function draw() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            const cw = canvas.width / cols, ch = canvas.height / rows;
-            ctx.fillStyle = "#000"; ctx.fillRect(0,0, canvas.width, canvas.height);
-            stars.forEach(s => { ctx.fillStyle = "#fff"; ctx.fillRect(s.x % canvas.width, s.y % canvas.height, s.s, s.s); });
+// UPDATE
+function update(){
 
-            for(let r=0; r<rows; r++) {
-                for(let c=0; c<cols; c++) {
-                    if(maze[r][c] === 1) {
-                        ctx.strokeStyle = "#00f2fe"; ctx.lineWidth = 1;
-                        ctx.strokeRect(c*cw+1, r*ch+1, cw-2, ch-2);
-                    }
-                    if(maze[r][c] === 3) {
-                        ctx.fillStyle = "rgba(0, 255, 0, 0.4)"; ctx.fillRect(c*cw, r*ch, cw, ch);
-                        ctx.fillStyle = "#00ff00"; ctx.font = "bold 10px Orbitron"; ctx.textAlign = "center";
-                        ctx.fillText("EXIT", c*cw + cw/2, r*ch + ch/2 + 5);
-                    }
-                }
-            }
+    // movement
+    player.dx = joyX * 0.1;
 
-            if (!isGameOver) ctx.drawImage(imgJavox, player.vx * cw + 2, player.vy * ch + 2, cw-4, ch-4);
-            ctx.drawImage(imgIbo, enemy.vx * cw + 1, enemy.vy * ch + 1, cw-2, ch-2);
+    player.x += player.dx;
 
-            if(isGameOver) {
-                ctx.fillStyle = "#ff0055"; ctx.font = "bold 18px Orbitron"; ctx.textAlign = "center";
-                ctx.fillText("BOT", enemy.vx * cw + cw/2, enemy.vy * ch - 10);
-            }
-            update();
-            requestAnimationFrame(draw);
-        }
+    // gravity
+    player.dy += gravity;
+    player.y += player.dy;
 
-        function resetGame() { currentLevel = 1; initLevel(1); }
-        initLevel(1);
-        draw();
-    </script>
+    // ground
+    if(player.y + player.h > canvas.height - 50){
+        player.y = canvas.height - 50 - player.h;
+        player.dy = 0;
+        player.grounded = true;
+    }
+
+    // jump
+    if(player.grounded && joyX < -30){
+        player.dy = player.jump;
+        player.grounded = false;
+    }
+
+    // bullets
+    bullets.forEach(b => b.x += b.speed);
+
+    bullets = bullets.filter(b => b.x < canvas.width);
+}
+
+// DRAW
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // player
+    ctx.fillStyle = "cyan";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+
+    // ground
+    ctx.fillStyle = "green";
+    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+    // bullets
+    ctx.fillStyle = "yellow";
+    bullets.forEach(b => {
+        ctx.fillRect(b.x, b.y, 10, 5);
+    });
+}
+
+// GAME LOOP
+function gameLoop(){
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
 </body>
 </html>
+
+
+
+
