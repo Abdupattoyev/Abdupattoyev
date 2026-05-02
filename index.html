@@ -2,212 +2,249 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manga Platformer Mobile</title>
+<title>Trap Puzzle Game FULL FIX</title>
 
 <style>
-body { 
-    margin:0; 
-    padding:0; 
-    background:#000; 
-    overflow:hidden; 
-    touch-action:none;
-    font-family: Arial;
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+  overflow: hidden;
 }
 
-canvas { 
-    display:block; 
-    margin:0 auto; 
-    background:#0a001f; 
+button {
+  padding: 20px 40px;
+  font-size: 18px;
+  border: none;
+  border-radius: 10px;
+  margin: 10px;
+  cursor: pointer;
 }
 
-#controls { 
-    position: fixed; 
-    bottom: 20px; 
-    left: 0; 
-    right: 0; 
-    display: flex; 
-    justify-content: space-between; 
-    padding: 0 20px; 
-}
-
-#joystick { 
-    width: 120px; 
-    height: 120px; 
-    background: rgba(255,255,255,0.15); 
-    border-radius: 50%; 
-    border: 2px solid #00ff88;
-    position: relative;
-}
-
-#stick {
-    width: 50px;
-    height: 50px;
-    background: #00ff88;
-    border-radius: 50%;
-    position: absolute;
-    left: 35px;
-    top: 35px;
-}
-
-#shootBtn { 
-    width: 90px; 
-    height: 90px; 
-    background: red; 
-    color: white; 
-    border: none; 
-    border-radius: 50%;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-#shootBtn:active {
-    transform: scale(0.9);
-}
+.hidden { display: none; }
 </style>
 </head>
 
 <body>
 
-<canvas id="game"></canvas>
-
-<div id="controls">
-    <div id="joystick">
-        <div id="stick"></div>
-    </div>
-    <button id="shootBtn">FIRE</button>
-</div>
+<h1 id="title">🎮 LEVEL 1</h1>
+<div id="game"></div>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let level = 1;
+let game = document.getElementById("game");
+let title = document.getElementById("title");
 
-// PLAYER
-let player = {
-    x: 100,
-    y: 300,
-    w: 40,
-    h: 60,
-    dx: 0,
-    dy: 0,
-    speed: 4,
-    jump: -12,
-    grounded: false
-};
+// ================= LOAD LEVEL =================
+function loadLevel(){
 
-// BULLETS
-let bullets = [];
+  game.innerHTML = "";
 
-// GRAVITY
-const gravity = 0.6;
+  // ================= LEVEL 1 =================
+  if(level === 1){
+    title.innerText = "🎮 LEVEL 1";
 
-// JOYSTICK
-let joystick = document.getElementById("joystick");
-let stick = document.getElementById("stick");
+    let text = document.createElement("h1");
+    text.innerText = "👉 Tugmani top";
 
-let dragging = false;
-let joyX = 0;
+    let fake = document.createElement("button");
+    fake.innerText = "BOS!";
+    fake.style.background = "red";
 
-// TOUCH CONTROLS
-joystick.addEventListener("touchstart", () => dragging = true);
+    let win = document.createElement("button");
+    win.innerText = "YASHIRIN";
+    win.style.background = "lime";
+    win.style.display = "none";
 
-joystick.addEventListener("touchmove", (e) => {
-    if(!dragging) return;
+    let drag = false;
 
-    let rect = joystick.getBoundingClientRect();
-    let x = e.touches[0].clientX - rect.left - 60;
+    text.onmousedown = () => drag = true;
+    document.onmouseup = () => drag = false;
 
-    joyX = x;
+    document.onmousemove = (e) => {
+      if(drag){
+        text.style.position = "absolute";
+        text.style.left = e.clientX - 100 + "px";
+        text.style.top = e.clientY - 20 + "px";
+        win.style.display = "block";
+      }
+    };
 
-    // limit
-    if(joyX > 40) joyX = 40;
-    if(joyX < -40) joyX = -40;
+    fake.onclick = () => alert("❌ Noto‘g‘ri 😈");
 
-    stick.style.left = (35 + joyX) + "px";
-});
+    win.onclick = () => nextLevel();
 
-joystick.addEventListener("touchend", () => {
-    dragging = false;
-    joyX = 0;
-    stick.style.left = "35px";
-});
+    game.appendChild(text);
+    game.appendChild(fake);
+    game.appendChild(win);
+  }
 
-// SHOOT
-document.getElementById("shootBtn").addEventListener("touchstart", () => {
-    bullets.push({
-        x: player.x + player.w,
-        y: player.y + player.h/2,
-        speed: 8
+  // ================= LEVEL 2 =================
+  if(level === 2){
+    title.innerText = "⏳ LEVEL 2";
+
+    let btn = document.createElement("button");
+    btn.innerText = "BOSMA 😈";
+
+    let timer = setTimeout(() => {
+      alert("🎉 LEVEL 2 O'TILDI!");
+      nextLevel();
+    }, 4000);
+
+    btn.onclick = () => {
+      alert("💀 Aldanding!");
+      clearTimeout(timer);
+      loadLevel();
+    };
+
+    game.appendChild(btn);
+  }
+
+  // ================= LEVEL 3 =================
+  if(level === 3){
+    title.innerText = "👉 LEVEL 3";
+
+    let text = document.createElement("h1");
+    text.innerText = "👉 Raqamni top";
+
+    let secret = document.createElement("div");
+    secret.innerText = "7";
+    secret.style.opacity = "0";
+    secret.style.fontSize = "30px";
+
+    let btn = document.createElement("button");
+    btn.innerText = "YUTISH";
+
+    let drag = false;
+    let clicks = 0;
+
+    text.onmousedown = () => drag = true;
+    document.onmouseup = () => drag = false;
+
+    document.onmousemove = (e) => {
+      if(drag){
+        text.style.position = "absolute";
+        text.style.left = e.clientX - 100 + "px";
+        text.style.top = e.clientY - 20 + "px";
+        secret.style.opacity = "1";
+      }
+    };
+
+    btn.onclick = () => {
+      clicks++;
+      if(clicks === 2){
+        nextLevel();
+      } else {
+        alert("❌ Yana urin 😈");
+      }
+    };
+
+    game.appendChild(text);
+    game.appendChild(secret);
+    game.appendChild(btn);
+  }
+
+  // ================= LEVEL 4 (🔥 NEW REAL PUZZLE) =================
+  if(level === 4){
+    title.innerText = "👉 LEVEL 4 - MATH TRICK";
+
+    let q = document.createElement("h1");
+    q.innerText = "👉 3 + 3 × 2 = ?";
+    game.appendChild(q);
+
+    let answers = [
+      {text:"12", correct:false},
+      {text:"9", correct:true},
+      {text:"6", correct:false}
+    ];
+
+    answers.sort(() => Math.random() - 0.5);
+
+    answers.forEach(a => {
+
+      let btn = document.createElement("button");
+      btn.innerText = a.text;
+
+      btn.onclick = () => {
+
+        if(a.correct){
+          alert("🎉 LEVEL 4 O'TILDI!");
+          nextLevel();
+        } else {
+          alert("💀 XATO! qaytadan 😈");
+          loadLevel();
+        }
+      };
+
+      game.appendChild(btn);
     });
-});
+  }
 
-// UPDATE
-function update(){
+  // ================= LEVEL 5 =================
+  if(level === 5){
+    title.innerText = "👉 LEVEL 5 - FINAL TRAP";
 
-    // movement
-    player.dx = joyX * 0.1;
+    let order = ["red","blue","green"];
+    let input = [];
 
-    player.x += player.dx;
+    let data = [
+      {color:"red", text:"Blue"},
+      {color:"blue", text:"Green"},
+      {color:"green", text:"Red"}
+    ];
 
-    // gravity
-    player.dy += gravity;
-    player.y += player.dy;
+    let h = document.createElement("h1");
+    h.innerText = "👉 Red → Blue → Green";
 
-    // ground
-    if(player.y + player.h > canvas.height - 50){
-        player.y = canvas.height - 50 - player.h;
-        player.dy = 0;
-        player.grounded = true;
-    }
+    game.appendChild(h);
 
-    // jump
-    if(player.grounded && joyX < -30){
-        player.dy = player.jump;
-        player.grounded = false;
-    }
+    data.forEach(d => {
 
-    // bullets
-    bullets.forEach(b => b.x += b.speed);
+      let b = document.createElement("button");
+      b.style.background = d.color;
+      b.innerText = d.text;
 
-    bullets = bullets.filter(b => b.x < canvas.width);
-}
+      b.onclick = () => {
 
-// DRAW
-function draw(){
+        input.push(d.color);
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(input.length === 3){
 
-    // player
-    ctx.fillStyle = "cyan";
-    ctx.fillRect(player.x, player.y, player.w, player.h);
+          let ok = true;
 
-    // ground
-    ctx.fillStyle = "green";
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+          for(let i=0;i<3;i++){
+            if(input[i] !== order[i]) ok = false;
+          }
 
-    // bullets
-    ctx.fillStyle = "yellow";
-    bullets.forEach(b => {
-        ctx.fillRect(b.x, b.y, 10, 5);
+          if(ok){
+            alert("🏆 SEN YUTDING!");
+          } else {
+            alert("💀 FINAL FAIL 😈");
+            loadLevel();
+          }
+
+          input = [];
+        }
+      };
+
+      game.appendChild(b);
     });
+  }
 }
 
-// GAME LOOP
-function gameLoop(){
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
+// ================= NEXT LEVEL =================
+function nextLevel(){
+  level++;
+  loadLevel();
 }
 
-gameLoop();
+loadLevel();
+
 </script>
 
 </body>
 </html>
-
-
-
-
+<link rel="stylesheet" href="style.css">
