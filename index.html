@@ -1,250 +1,386 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Trap Puzzle Game FULL FIX</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Escape PRO</title>
 
 <style>
-body {
-  margin: 0;
-  background: #111;
-  color: white;
-  font-family: Arial;
-  text-align: center;
-  overflow: hidden;
+/* ===== BACKGROUND DESIGN ===== */
+body{
+  margin:0;
+  font-family:'Segoe UI', Roboto, sans-serif;
+  color:white;
+  text-align:center;
+  padding-top:60px;
+  /* Joystik o'yin maydonini yopib qo'ymasligi uchun bo'sh joy */
+  padding-bottom: 240px; 
+  background: radial-gradient(circle at top, #1a1a2e, #0f0f0f);
+  overflow-x:hidden;
+  min-height: 100vh;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  width:100%;
+  height:100%;
+  background: radial-gradient(circle, rgba(0,255,204,0.08), transparent 60%);
+  animation: move 6s infinite alternate;
+  z-index:-1;
+}
+@keyframes move{
+  from{transform:translateY(0px);}
+  to{transform:translateY(20px);}
+}
+
+/* ===== TOP BAR ===== */
+#topBar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  background:#141414cc;
+  backdrop-filter:blur(10px);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 20px;
+  box-sizing: border-box;
+  z-index:999;
+  border-bottom: 1px solid rgba(0,255,204,0.2);
+}
+
+.icon{font-size:22px; cursor:pointer; transition: 0.2s;}
+
+/* ===== MENU ===== */
+#menu{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  height: 80vh;
+}
+
+h1{
+  color:#00ffcc;
+  text-shadow:0 0 15px rgba(0,255,204,0.5);
+  font-size: 2.5rem;
 }
 
 button {
-  padding: 20px 40px;
-  font-size: 18px;
-  border: none;
-  border-radius: 10px;
-  margin: 10px;
-  cursor: pointer;
+  padding:12px 35px;
+  margin:10px;
+  border:none;
+  border-radius:50px;
+  background:#00ffcc;
+  color:black;
+  font-weight:bold;
+  font-size: 1rem;
+  cursor:pointer;
+  transition:0.3s;
+  box-shadow: 0 5px 15px rgba(0,255,204,0.3);
 }
 
-.hidden { display: none; }
+/* ===== GAME ===== */
+#gameScreen{display:none;}
+
+#game{
+  display:grid;
+  gap:8px;
+  justify-content:center;
+  margin-top:20px;
+  padding:15px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
+.cell{
+  width:60px; /* Kichraytirildi */
+  height:60px; /* Kichraytirildi */
+  background:rgba(255,255,255,0.05);
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ===== IXCHAM JOYSTICK ===== */
+#joystick{
+  position:fixed;
+  bottom:20px; /* Bir oz pastga tushirildi */
+  left:50%;
+  transform:translateX(-50%);
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+  background:rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  padding:15px;
+  border-radius:35px;
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 1001;
+}
+
+.row{display:flex; gap:5px;}
+
+.btn{
+  width:55px; /* Joystik tugmalari kichraytirildi */
+  height:55px;
+  background: #1e1e1e;
+  border: 2px solid #00ffcc;
+  color: #00ffcc;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.1s;
+  box-shadow: 0 3px 0 #008a6e;
+}
+
+.btn:active{
+  transform: translateY(3px);
+  box-shadow: 0 0 0 #008a6e;
+  background: #00ffcc;
+  color: #1a1a1a;
+}
+
+.spacer{ width:55px; height:55px; }
+
+/* ===== POPUP ===== */
+.popup{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.9);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+}
+
+.box{
+  background:#1a1a1a;
+  padding:25px;
+  border-radius:20px;
+  width:80%;
+  max-width:300px;
+  border:2px solid #00ffcc;
+}
+
+.setting-item { margin-top: 12px; text-align: left; }
+.setting-item label { display: block; margin-bottom: 5px; font-size: 0.85rem; color: #00ffcc; }
+input[type="range"] { width: 100%; accent-color: #00ffcc; }
+select { padding: 8px; border-radius: 8px; background: #333; color: white; border: 1px solid #00ffcc; width: 100%; }
 </style>
 </head>
 
 <body>
 
-<h1 id="title">🎮 LEVEL 1</h1>
-<div id="game"></div>
+<audio id="bgMusic" loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
+<div id="topBar">
+  <div class="icon" onclick="openInfo()">ℹ️</div>
+  <div id="title" style="font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;">MAZE ESCAPE</div>
+  <div class="icon" onclick="openSettings()">⚙️</div>
+</div>
+
+<div id="menu">
+  <h1 id="menuTitle">Maze Escape</h1>
+  <button onclick="startGame()" id="startBtn">START GAME</button>
+</div>
+
+<div id="gameScreen">
+  <h2 id="levelText" style="color:#00ffcc; font-size: 1.2rem;">Level 1</h2>
+  <div id="game"></div>
+</div>
+
+<!-- IXCHAM JOYSTICK -->
+<div id="joystick">
+  <div class="btn" onclick="moveDir('up')">▲</div>
+  <div class="row">
+    <div class="btn" onclick="moveDir('left')">◀</div>
+    <div class="spacer"></div>
+    <div class="btn" onclick="moveDir('right')">▶</div>
+  </div>
+  <div class="btn" onclick="moveDir('down')">▼</div>
+</div>
+
+<div class="popup" id="gameOver">
+  <div class="box">
+    <h2 id="gameOverTitle" style="color:#ff4d4d">Game Over 💀</h2>
+    <p id="taunt" style="font-size: 0.9rem; margin-bottom: 20px;"></p>
+    <button onclick="restartGame()" id="restartBtn" style="width: 100%;">Restart</button>
+  </div>
+</div>
+
+<div class="popup" id="settingsPopup">
+  <div class="box">
+    <h2 id="settingsTitle">Settings</h2>
+    <div class="setting-item">
+      <label>Language</label>
+      <select id="lang" onchange="changeLanguage()">
+        <option value="en">English</option>
+        <option value="ru">Russian</option>
+        <option value="uz">Uzbek</option>
+      </select>
+    </div>
+    <div class="setting-item">
+      <label id="musicLabel">Music: OFF</label>
+      <button onclick="toggleMusic()" id="musicBtn" style="width: 100%; margin: 5px 0; padding: 8px; font-size: 0.9rem;">Toggle Music</button>
+    </div>
+    <div class="setting-item">
+      <label id="volumeLabel">Volume: 50%</label>
+      <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" oninput="changeVolume()">
+    </div>
+    <br>
+    <button onclick="closeSettings()" style="width:100%; background: #444; color: white; padding: 10px;">Close</button>
+  </div>
+</div>
+
+<div class="popup" id="infoPopup">
+  <div class="box">
+    <h2 id="infoTitle">How to Play</h2>
+    <p id="infoText" style="font-size: 0.85rem;"></p>
+    <button onclick="closeInfo()" style="width:100%;">OK</button>
+  </div>
+</div>
 
 <script>
+let lang="en";
+const t={
+en:{
+start:"START GAME", settings:"Settings", info:"How to Play", infoText:"Use the joystick to move. Reach 🏁. Avoid 'X'!",
+gameOver:"Game Over 💀", restart:"Restart", musicOn:"Music: ON", musicOff:"Music: OFF",
+taunts:["💀 Bro really?", "😂 Embarrassing...", "😏 Too slow!", "🧠 Think!"]
+},
+ru:{
+start:"СТАРТ", settings:"Настройки", info:"Как играть", infoText:"Используй джойстик. Дойди до 🏁. Избегай 'X'!",
+gameOver:"Игра окончена", restart:"Повторить", musicOn:"Музыка: ВКЛ", musicOff:"Музыка: ВЫКЛ",
+taunts:["💀 Ты серьёзно?", "😂 Это было больно", "🔥 Ловушка!", "🧠 Думай!"]
+},
+uz:{
+start:"BOSHLASH", settings:"Sozlamalar", info:"Qanday o‘ynash", infoText:"Joystik bilan yur. 🏁 ga yetib bor. 'X' dan ehtiyot bo'l!",
+gameOver:"O‘yin tugadi 💀", restart:"Qayta boshlash", musicOn:"Musiqa: YONIQ", musicOff:"Musiqa: O'CHIQ",
+taunts:["💀 Tuzoq yedi!", "😂 Juda yomon!", "🔥 Qochib bo'lmadi!", "🧠 O'yla!"]
+}
+};
 
-let level = 1;
-let game = document.getElementById("game");
-let title = document.getElementById("title");
+let music = document.getElementById("bgMusic");
+let musicActive = false;
 
-// ================= LOAD LEVEL =================
-function loadLevel(){
-
-  game.innerHTML = "";
-
-  // ================= LEVEL 1 =================
-  if(level === 1){
-    title.innerText = "🎮 LEVEL 1";
-
-    let text = document.createElement("h1");
-    text.innerText = "👉 Tugmani top";
-
-    let fake = document.createElement("button");
-    fake.innerText = "BOS!";
-    fake.style.background = "red";
-
-    let win = document.createElement("button");
-    win.innerText = "YASHIRIN";
-    win.style.background = "lime";
-    win.style.display = "none";
-
-    let drag = false;
-
-    text.onmousedown = () => drag = true;
-    document.onmouseup = () => drag = false;
-
-    document.onmousemove = (e) => {
-      if(drag){
-        text.style.position = "absolute";
-        text.style.left = e.clientX - 100 + "px";
-        text.style.top = e.clientY - 20 + "px";
-        win.style.display = "block";
-      }
-    };
-
-    fake.onclick = () => alert("❌ Noto‘g‘ri 😈");
-
-    win.onclick = () => nextLevel();
-
-    game.appendChild(text);
-    game.appendChild(fake);
-    game.appendChild(win);
-  }
-
-  // ================= LEVEL 2 =================
-  if(level === 2){
-    title.innerText = "⏳ LEVEL 2";
-
-    let btn = document.createElement("button");
-    btn.innerText = "BOSMA 😈";
-
-    let timer = setTimeout(() => {
-      alert("🎉 LEVEL 2 O'TILDI!");
-      nextLevel();
-    }, 4000);
-
-    btn.onclick = () => {
-      alert("💀 Aldanding!");
-      clearTimeout(timer);
-      loadLevel();
-    };
-
-    game.appendChild(btn);
-  }
-
-  // ================= LEVEL 3 =================
-  if(level === 3){
-    title.innerText = "👉 LEVEL 3";
-
-    let text = document.createElement("h1");
-    text.innerText = "👉 Raqamni top";
-
-    let secret = document.createElement("div");
-    secret.innerText = "7";
-    secret.style.opacity = "0";
-    secret.style.fontSize = "30px";
-
-    let btn = document.createElement("button");
-    btn.innerText = "YUTISH";
-
-    let drag = false;
-    let clicks = 0;
-
-    text.onmousedown = () => drag = true;
-    document.onmouseup = () => drag = false;
-
-    document.onmousemove = (e) => {
-      if(drag){
-        text.style.position = "absolute";
-        text.style.left = e.clientX - 100 + "px";
-        text.style.top = e.clientY - 20 + "px";
-        secret.style.opacity = "1";
-      }
-    };
-
-    btn.onclick = () => {
-      clicks++;
-      if(clicks === 2){
-        nextLevel();
-      } else {
-        alert("❌ Yana urin 😈");
-      }
-    };
-
-    game.appendChild(text);
-    game.appendChild(secret);
-    game.appendChild(btn);
-  }
-
-  // ================= LEVEL 4 (🔥 NEW REAL PUZZLE) =================
-  if(level === 4){
-    title.innerText = "👉 LEVEL 4 - MATH TRICK";
-
-    let q = document.createElement("h1");
-    q.innerText = "👉 3 + 3 × 2 = ?";
-    game.appendChild(q);
-
-    let answers = [
-      {text:"12", correct:false},
-      {text:"9", correct:true},
-      {text:"6", correct:false}
-    ];
-
-    answers.sort(() => Math.random() - 0.5);
-
-    answers.forEach(a => {
-
-      let btn = document.createElement("button");
-      btn.innerText = a.text;
-
-      btn.onclick = () => {
-
-        if(a.correct){
-          alert("🎉 LEVEL 4 O'TILDI!");
-          nextLevel();
-        } else {
-          alert("💀 XATO! qaytadan 😈");
-          loadLevel();
-        }
-      };
-
-      game.appendChild(btn);
-    });
-  }
-
-  // ================= LEVEL 5 =================
-  if(level === 5){
-    title.innerText = "👉 LEVEL 5 - FINAL TRAP";
-
-    let order = ["red","blue","green"];
-    let input = [];
-
-    let data = [
-      {color:"red", text:"Blue"},
-      {color:"blue", text:"Green"},
-      {color:"green", text:"Red"}
-    ];
-
-    let h = document.createElement("h1");
-    h.innerText = "👉 Red → Blue → Green";
-
-    game.appendChild(h);
-
-    data.forEach(d => {
-
-      let b = document.createElement("button");
-      b.style.background = d.color;
-      b.innerText = d.text;
-
-      b.onclick = () => {
-
-        input.push(d.color);
-
-        if(input.length === 3){
-
-          let ok = true;
-
-          for(let i=0;i<3;i++){
-            if(input[i] !== order[i]) ok = false;
-          }
-
-          if(ok){
-            alert("🏆 SEN YUTDING!");
-          } else {
-            alert("💀 FINAL FAIL 😈");
-            loadLevel();
-          }
-
-          input = [];
-        }
-      };
-
-      game.appendChild(b);
-    });
+function toggleMusic() {
+  musicActive = !musicActive;
+  if(musicActive) {
+    music.play();
+    document.getElementById("musicLabel").innerText = t[lang].musicOn;
+  } else {
+    music.pause();
+    document.getElementById("musicLabel").innerText = t[lang].musicOff;
   }
 }
 
-// ================= NEXT LEVEL =================
-function nextLevel(){
-  level++;
+function changeVolume() {
+  let vol = document.getElementById("volumeSlider").value;
+  music.volume = vol;
+  document.getElementById("volumeLabel").innerText = "Volume: " + Math.round(vol * 100) + "%";
+}
+
+let level=1;
+let size=3;
+let player={x:0,y:0};
+let map=[];
+let active=true;
+
+function startGame(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("gameScreen").style.display="block";
+  document.getElementById("joystick").style.display="flex";
+  if(musicActive) music.play();
   loadLevel();
 }
 
-loadLevel();
+function loadLevel(){
+  if(level===1){ size=3; map=[["S",".","."],["X",".","X"],["X",".","F"]]; }
+  else if(level===2){ size=4; map=[["S",".",".","X"],["X","X",".","X"],["X",".",".","."],["X","X","X","F"]]; }
+  player={x:0,y:0};
+  document.getElementById("levelText").innerText="Level "+level;
+  draw();
+}
 
+function draw(){
+  let g=document.getElementById("game");
+  g.innerHTML="";
+  g.style.gridTemplateColumns=`repeat(${size},60px)`;
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      let d=document.createElement("div");
+      d.className="cell";
+      if(player.x===x && player.y===y){
+        d.innerHTML="🙂"; d.style.background="#00ffcc"; d.style.boxShadow="0 0 15px #00ffcc";
+      }
+      if(map[y][x]==="F") d.innerHTML="🏁";
+      g.appendChild(d);
+    }
+  }
+}
+
+function moveDir(dir){
+  if(!active) return;
+  let x=player.x, y=player.y;
+  if(dir==="up") y--; if(dir==="down") y++; if(dir==="left") x--; if(dir==="right") x++;
+  if(x<0||y<0||x>=size||y>=size) return;
+  let c=map[y][x];
+  player={x,y};
+  if(c==="X") return gameOver();
+  if(c==="F"){ level++; if(level>2) level=1; loadLevel(); return; }
+  draw();
+}
+
+function gameOver(){
+  active=false;
+  document.getElementById("joystick").style.opacity="0.3";
+  document.getElementById("gameOver").style.display="flex";
+  let arr=t[lang].taunts;
+  document.getElementById("taunt").innerText=arr[Math.floor(Math.random()*arr.length)];
+}
+
+function restartGame(){
+  active=true;
+  document.getElementById("joystick").style.opacity="1";
+  document.getElementById("gameOver").style.display="none";
+  loadLevel();
+}
+
+function openSettings(){ document.getElementById("settingsPopup").style.display="flex"; }
+function closeSettings(){ document.getElementById("settingsPopup").style.display="none"; }
+function openInfo(){ 
+  document.getElementById("infoPopup").style.display="flex";
+  document.getElementById("infoText").innerText=t[lang].infoText;
+}
+function closeInfo(){ document.getElementById("infoPopup").style.display="none"; }
+
+function changeLanguage(){
+  lang=document.getElementById("lang").value;
+  document.getElementById("startBtn").innerText=t[lang].start;
+  document.getElementById("settingsTitle").innerText=t[lang].settings;
+  document.getElementById("infoTitle").innerText=t[lang].info;
+  document.getElementById("gameOverTitle").innerText=t[lang].gameOver;
+  document.getElementById("restartBtn").innerText=t[lang].restart;
+  document.getElementById("musicLabel").innerText = musicActive ? t[lang].musicOn : t[lang].musicOff;
+}
 </script>
-
 </body>
 </html>
-<link rel="stylesheet" href="style.css">
